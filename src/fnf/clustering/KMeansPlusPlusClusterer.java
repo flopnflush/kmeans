@@ -403,6 +403,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
                 if (resultSet.size() < k) {
                     // Now update elements of minDistSquared.  We only have to compute
                     // the distance to the new center to do this.
+                	/*
                     for (int j = 0; j < numPoints; j++) {
                         // Only have to worry about the points still not taken.
                         if (!taken[j]) {
@@ -414,6 +415,37 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
                             }
                         }
                     }
+                    */
+                    
+                    final int chunksize = (numPoints + nThreads - 1) / nThreads;
+                    final int loops = (numPoints + chunksize - 1) / chunksize;
+                    final CountDownLatch latch = new CountDownLatch(loops);
+                    for (int j=0; j<numPoints;) {
+                        final int lo = j;
+                        j += chunksize;
+                        final int hi = (j<numPoints) ? j : numPoints;
+                        threadPool.submit(new Runnable() {
+                            public void run() {
+                                for (int j=lo; j<hi; j++) {
+                                    if (!taken[j]) {
+                                    	final T point = pointList.get(j);
+                                        double d = distance(p, point);
+                                        double d2 = d * d * point.getCount();
+                                        if (d2 < minDistSquared[j]) {
+                                            minDistSquared[j] = d2;
+                                        }
+                                    }
+                                }
+                                latch.countDown();
+                            }
+                        });
+                    }
+                    try {
+                        latch.await();
+                    } catch (InterruptedException e) {
+                    	e.printStackTrace();
+                    }
+                    
                 }
 
             } else {
