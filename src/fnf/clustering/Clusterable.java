@@ -30,4 +30,12 @@ public interface Clusterable {
      * @return the point array
      */
     double[] getPoint();
+    
+    
+    /**
+     * Get the absolute frequency of this value
+     *
+     * @return the count of this value
+     */   
+    int getCount();
 }
