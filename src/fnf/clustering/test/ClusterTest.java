@@ -8,9 +8,10 @@ import fnf.clustering.*;
 import fnf.clustering.distance.*;
 
 public class ClusterTest {
-	static final int N = 1000000;
-	static final int K = 1000;
+	static final int N = 10000;
+	static final int K = 100;
 	static final int ITERATIONS = 100;
+	static final int TRIALS = 5;
 	
 	public static void main(String[] args) {
 		Random rnd = new Random();
@@ -23,9 +24,10 @@ public class ClusterTest {
 		
 		KMeansPlusPlusClusterer<DoublePoint> clusterer = new KMeansPlusPlusClusterer<DoublePoint>(K, ITERATIONS, new EarthMoversDistance());
 		
+		MultiKMeansPlusPlusClusterer<DoublePoint> multiClusterer = new MultiKMeansPlusPlusClusterer<DoublePoint>(clusterer, TRIALS);
 		long start = System.currentTimeMillis();
 		
-		List<CentroidCluster<DoublePoint>> clusterResults = clusterer.cluster(data);
+		List<CentroidCluster<DoublePoint>> clusterResults = multiClusterer.cluster(data);
 		
 		long stop = System.currentTimeMillis();
 		

@@ -82,7 +82,7 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
 
         // do several clustering trials
         for (int i = 0; i < numTrials; ++i) {
-
+        	System.out.println("Trial " + (i+1));
             // compute a clusters list
             List<CentroidCluster<T>> clusters = clusterer.cluster(points);
 
@@ -95,13 +95,15 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
                     final Clusterable center = cluster.getCenter();
                     double stat = 0; int n = 0;
                     for (final T point : cluster.getPoints()) {
-                        stat += distance(point, center)*point.getCount();
+                    	final double dist = distance(point, center);
+                        stat += dist*dist*point.getCount();
                         n += point.getCount();
                     }
                     varianceSum += (stat/n);
-
                 }
             }
+            System.out.println("Variance: " + varianceSum);
+            System.out.println();
                 
             if (varianceSum <= bestVarianceSum) {
                 // this one is the best we have found so far, remember it
@@ -109,7 +111,7 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
                 bestVarianceSum = varianceSum;
             }
         }
-
+        System.out.println("Best Variance: " + bestVarianceSum);
         // return the best clusters list found
         return best;
 

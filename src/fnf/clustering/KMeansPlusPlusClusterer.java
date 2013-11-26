@@ -247,7 +247,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
             // if there were no more changes in the point-to-cluster assignment
             // and there are no empty clusters left, return the current clusters
             if (changes == 0 && !emptyCluster) {
-                return clusters;
+                break;
             }
         }
         System.out.println();
