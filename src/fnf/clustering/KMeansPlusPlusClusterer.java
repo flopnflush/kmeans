@@ -485,7 +485,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
                         for (final T point : cluster.getPoints()) {
                             final double dist = distance(point, center);
                             variance += dist*dist*point.getCount();
-                            n++;
+                            n += point.getCount();
                         }
                         variance /= n;
 
