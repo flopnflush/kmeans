@@ -70,8 +70,11 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
     /** Selected strategy for empty clusters. */
     private final EmptyClusterStrategy emptyStrategy;
     
+    /** Number of Threads */
+    private final int nThreads;
+    
     /** Threadpool. */
-    ExecutorService threadPool;
+    private ExecutorService threadPool;
 
     /** Build a clusterer.
      * <p>
@@ -148,7 +151,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
         this.k             = k;
         this.maxIterations = maxIterations;
         this.emptyStrategy = emptyStrategy;
-        this.threadPool = Executors.newFixedThreadPool(threads);
+        this.nThreads = threads;
     }
 
     /**
@@ -192,6 +195,8 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
         	//TODO: Exception
             return null;
         }
+        
+        threadPool = Executors.newFixedThreadPool(nThreads);
         
         // Convert to list for indexed access. Make it unmodifiable, since removal of items
         // would screw up the logic of this method.
@@ -245,6 +250,9 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
                 return clusters;
             }
         }
+        System.out.println();
+        
+        threadPool.shutdown();
         return clusters;
     }
 

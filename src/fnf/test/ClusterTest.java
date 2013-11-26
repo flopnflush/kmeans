@@ -8,9 +8,9 @@ import fnf.clustering.*;
 import fnf.distance.*;
 
 public class ClusterTest {
-	static final int N = 100000;
-	static final int K = 1000;
-	static final int ITERATIONS = 20;
+	static final int N = 10000;
+	static final int K = 100;
+	static final int ITERATIONS = 10;
 	
 	public static void main(String[] args) {
 		Random rnd = new Random();
