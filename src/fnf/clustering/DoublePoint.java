@@ -46,6 +46,19 @@ public class DoublePoint implements Clusterable, Serializable {
     public DoublePoint(final double... point) {
         this.point = point;
     }
+     
+    /**
+     * Build an instance wrapping an double array.
+     * <p>
+     * The wrapped array is referenced, it is <em>not</em> copied.
+     *
+     * @param count the absolute frequency of this point
+     * @param point the n-dimensional point in double space
+     */    
+    public DoublePoint(final int count, final double... point) {
+    	this.point = point;
+    	this.n = count;
+    }
 
     /**
      * Build an instance wrapping an integer array.
