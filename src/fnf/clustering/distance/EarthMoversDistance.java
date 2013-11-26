@@ -14,29 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fnf.distance;
+package fnf.clustering.distance;
 
 
 /**
- * Calculates the Canberra distance between two points.
+ * Calculates the Earh Mover's distance (also known as Wasserstein metric) between two distributions.
  *
- * @version $Id $
- * @since 3.2
+ * @see <a href="http://en.wikipedia.org/wiki/Earth_mover's_distance">Earth Mover's distance (Wikipedia)</a>
+ *
+ * @version $Id$
+ * @since 3.3
  */
-public class CanberraDistance implements DistanceMeasure {
+public class EarthMoversDistance implements DistanceMeasure {
 
     /** Serializable version identifier. */
-    private static final long serialVersionUID = -6972277381587032228L;
+    private static final long serialVersionUID = -5406732779747414922L;
 
     /** {@inheritDoc} */
     public double compute(double[] a, double[] b) {
-        double sum = 0;
+        double lastDistance = 0;
+        double totalDistance = 0;
         for (int i = 0; i < a.length; i++) {
-            final double num = Math.abs(a[i] - b[i]);
-            final double denom = Math.abs(a[i]) + Math.abs(b[i]);
-            sum += num == 0.0 && denom == 0.0 ? 0.0 : num / denom;
+            final double currentDistance = (a[i] + lastDistance) - b[i];
+            totalDistance += Math.abs(currentDistance);
+            lastDistance = currentDistance;
         }
-        return sum;
+        return totalDistance;
     }
-
 }

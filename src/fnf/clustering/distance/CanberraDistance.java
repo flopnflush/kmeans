@@ -14,28 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fnf.distance;
+package fnf.clustering.distance;
 
 
 /**
- * Calculates the L<sub>2</sub> (Euclidean) distance between two points.
+ * Calculates the Canberra distance between two points.
  *
  * @version $Id $
  * @since 3.2
  */
-public class EuclideanDistance implements DistanceMeasure {
+public class CanberraDistance implements DistanceMeasure {
 
     /** Serializable version identifier. */
-    private static final long serialVersionUID = 1717556319784040040L;
+    private static final long serialVersionUID = -6972277381587032228L;
 
     /** {@inheritDoc} */
     public double compute(double[] a, double[] b) {
         double sum = 0;
         for (int i = 0; i < a.length; i++) {
-            final double dp = a[i] - b[i];
-            sum += dp * dp;
+            final double num = Math.abs(a[i] - b[i]);
+            final double denom = Math.abs(a[i]) + Math.abs(b[i]);
+            sum += num == 0.0 && denom == 0.0 ? 0.0 : num / denom;
         }
-        return Math.sqrt(sum);
+        return sum;
     }
 
 }

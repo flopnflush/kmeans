@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import fnf.distance.DistanceMeasure;
-import fnf.distance.EuclideanDistance;
+import fnf.clustering.distance.DistanceMeasure;
+import fnf.clustering.distance.EuclideanDistance;
 
 /**
  * Clustering algorithm based on David Arthur and Sergei Vassilvitski k-means++ algorithm.

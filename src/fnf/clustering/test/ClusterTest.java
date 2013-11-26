@@ -1,16 +1,16 @@
-package fnf.test;
+package fnf.clustering.test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import fnf.clustering.*;
-import fnf.distance.*;
+import fnf.clustering.distance.*;
 
 public class ClusterTest {
-	static final int N = 10000;
-	static final int K = 100;
-	static final int ITERATIONS = 10;
+	static final int N = 2000000;
+	static final int K = 1000;
+	static final int ITERATIONS = 100;
 	
 	public static void main(String[] args) {
 		Random rnd = new Random();

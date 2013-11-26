@@ -19,7 +19,7 @@ package fnf.clustering;
 import java.util.Collection;
 import java.util.List;
 
-import fnf.distance.DistanceMeasure;
+import fnf.clustering.distance.DistanceMeasure;
 
 /**
  * Base class for clustering algorithms.

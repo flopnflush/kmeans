@@ -14,31 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fnf.distance;
+package fnf.clustering.distance;
 
 
 /**
- * Calculates the Earh Mover's distance (also known as Wasserstein metric) between two distributions.
+ * Calculates the L<sub>2</sub> (Euclidean) distance between two points.
  *
- * @see <a href="http://en.wikipedia.org/wiki/Earth_mover's_distance">Earth Mover's distance (Wikipedia)</a>
- *
- * @version $Id$
- * @since 3.3
+ * @version $Id $
+ * @since 3.2
  */
-public class EarthMoversDistance implements DistanceMeasure {
+public class EuclideanDistance implements DistanceMeasure {
 
     /** Serializable version identifier. */
-    private static final long serialVersionUID = -5406732779747414922L;
+    private static final long serialVersionUID = 1717556319784040040L;
 
     /** {@inheritDoc} */
     public double compute(double[] a, double[] b) {
-        double lastDistance = 0;
-        double totalDistance = 0;
+        double sum = 0;
         for (int i = 0; i < a.length; i++) {
-            final double currentDistance = (a[i] + lastDistance) - b[i];
-            totalDistance += Math.abs(currentDistance);
-            lastDistance = currentDistance;
+            final double dp = a[i] - b[i];
+            sum += dp * dp;
         }
-        return totalDistance;
+        return Math.sqrt(sum);
     }
+
 }

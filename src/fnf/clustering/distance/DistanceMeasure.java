@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fnf.distance;
+package fnf.clustering.distance;
 
 import java.io.Serializable;
 
