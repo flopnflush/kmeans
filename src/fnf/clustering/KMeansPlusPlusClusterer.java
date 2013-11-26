@@ -137,6 +137,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T>
      *   If negative, no maximum will be used.
      * @param measure the distance measure to use
      * @param emptyStrategy strategy to use for handling empty clusters that
+     * @param threads the number of threads to use
      * may appear during algorithm iterations
      */
     public KMeansPlusPlusClusterer(final int k, final int maxIterations,
