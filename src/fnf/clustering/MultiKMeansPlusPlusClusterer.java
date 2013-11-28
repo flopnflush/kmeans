@@ -17,8 +17,17 @@
 
 package fnf.clustering;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import fnf.clustering.KMeansPlusPlusClusterer.EmptyClusterStrategy;
+import fnf.clustering.distance.DistanceMeasure;
 
 
 /**
@@ -30,30 +39,26 @@ import java.util.List;
  */
 public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T> {
 
-    /** The underlying k-means clusterer. */
-    private final KMeansPlusPlusClusterer<T> clusterer;
-
-    /** The number of trial runs. */
-    private final int numTrials;
-
-    /** Build a clusterer.
-     * @param clusterer the k-means clusterer to use
-     * @param numTrials number of trial runs
-     */
-    public MultiKMeansPlusPlusClusterer(final KMeansPlusPlusClusterer<T> clusterer,
-                                        final int numTrials) {
-        super(clusterer.getDistanceMeasure());
-        this.clusterer = clusterer;
-        this.numTrials = numTrials;
-    }
-
-    /**
-     * Returns the embedded k-means clusterer used by this instance.
-     * @return the embedded clusterer
-     */
-    public KMeansPlusPlusClusterer<T> getClusterer() {
-        return clusterer;
-    }
+    private final int k;
+    private final int maxIterations;
+    private final DistanceMeasure measure;
+    private final EmptyClusterStrategy emptyStrategy;
+    private final int threadsPerTrial;
+    private final int numTrials; 
+    private final int parallelTrials;
+    
+	public MultiKMeansPlusPlusClusterer(final int k, final int maxIterations,
+			final DistanceMeasure measure,
+			final EmptyClusterStrategy emptyStrategy, final int threadsPerTrial, final int numTrials, final int parallelTrials) {
+		super(measure);
+		this.k = k;
+		this.maxIterations = maxIterations;
+		this.measure = measure;
+		this.emptyStrategy = emptyStrategy;
+		this.threadsPerTrial = threadsPerTrial;
+		this.numTrials = numTrials;
+		this.parallelTrials = parallelTrials;
+	}
 
     /**
      * Returns the number of trials this instance will do.
@@ -75,46 +80,68 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
      *   {@link KMeansPlusPlusClusterer.EmptyClusterStrategy} is set to {@code ERROR}.
      */
     public List<CentroidCluster<T>> cluster(final Collection<T> points) {
-
-        // at first, we have not found any clusters list yet
-        List<CentroidCluster<T>> best = null;
-        double bestVarianceSum = Double.POSITIVE_INFINITY;
+		final AtomicLong bestVarianceSum = new AtomicLong();
+		bestVarianceSum.set(Double.doubleToLongBits(Double.MAX_VALUE));
+		final AtomicReference<List<CentroidCluster<T>>> selected = new AtomicReference<List<CentroidCluster<T>>>();
+		final CountDownLatch latch = new CountDownLatch(numTrials);
+        
+        ExecutorService executor = Executors.newFixedThreadPool(parallelTrials);
 
         // do several clustering trials
         for (int i = 0; i < numTrials; ++i) {
-        	System.out.println("Trial " + (i+1));
-            // compute a clusters list
-            List<CentroidCluster<T>> clusters = clusterer.cluster(points);
+        	final int trial = i;
+        	executor.submit(new Runnable(){
+        		@Override
+        		public void run() {
+                	System.out.println("Starting trial " + trial);
+                	KMeansPlusPlusClusterer<T> clusterer = new KMeansPlusPlusClusterer<T>(k, maxIterations, measure, emptyStrategy, threadsPerTrial, trial);
+                	
+                    // compute a clusters list
+                    List<CentroidCluster<T>> clusters = clusterer.cluster(points);
 
-            // compute the variance of the current list
-            double varianceSum = 0.0;
-            for (final CentroidCluster<T> cluster : clusters) {
-                if (!cluster.getPoints().isEmpty()) {
+                    // compute the variance of the current list
+                    double varianceSum = 0.0;
+                    for (final CentroidCluster<T> cluster : clusters) {
+                        if (!cluster.getPoints().isEmpty()) {
 
-                    // compute the distance variance of the current cluster
-                    final Clusterable center = cluster.getCenter();
-                    double stat = 0; int n = 0;
-                    for (final T point : cluster.getPoints()) {
-                    	final double dist = distance(point, center);
-                        stat += dist*dist*point.getCount();
-                        n += point.getCount();
+                            // compute the distance variance of the current cluster
+                            final Clusterable center = cluster.getCenter();
+                            double stat = 0; int n = 0;
+                            for (final T point : cluster.getPoints()) {
+                            	final double dist = distance(point, center);
+                                stat += dist*dist*point.getCount();
+                                n += point.getCount();
+                            }
+                            varianceSum += (stat/n);
+                        }
                     }
-                    varianceSum += (stat/n);
-                }
-            }
-            System.out.println("Variance: " + varianceSum);
-            System.out.println();
-                
-            if (varianceSum <= bestVarianceSum) {
-                // this one is the best we have found so far, remember it
-                best            = clusters;
-                bestVarianceSum = varianceSum;
-            }
+                    System.out.println("T" + trial + ": Variance sum: " + varianceSum);
+                    
+					while(true) {
+					    final long oldBestVariance = bestVarianceSum.get();
+					    if(varianceSum >= Double.longBitsToDouble(oldBestVariance))
+					        break;
+					    if(bestVarianceSum.compareAndSet(oldBestVariance, Double.doubleToLongBits(varianceSum))) {
+					    	selected.getAndSet(clusters);
+					    	break;
+					    }        
+					}
+	        		latch.countDown();
+        		}
+        	});
         }
-        System.out.println("Best Variance: " + bestVarianceSum);
+        
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		executor.shutdown();
+		
+        System.out.println("Best Variance: " + Double.longBitsToDouble(bestVarianceSum.get()));
+        
         // return the best clusters list found
-        return best;
-
+        return selected.get();
     }
 
 }

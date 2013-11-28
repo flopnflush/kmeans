@@ -5,13 +5,14 @@ import java.util.List;
 import java.util.Random;
 
 import fnf.clustering.*;
+import fnf.clustering.KMeansPlusPlusClusterer.EmptyClusterStrategy;
 import fnf.clustering.distance.*;
 
 public class ClusterTest {
-	static final int N = 10000;
+	static final int N = 1000;
 	static final int K = 100;
 	static final int ITERATIONS = 100;
-	static final int TRIALS = 5;
+	static final int TRIALS = 8;
 	
 	public static void main(String[] args) {
 		Random rnd = new Random();
@@ -22,9 +23,7 @@ public class ClusterTest {
 			data.add(new DoublePoint(rnd.nextDouble(), rnd.nextDouble(), rnd.nextDouble()));
 		}
 		
-		KMeansPlusPlusClusterer<DoublePoint> clusterer = new KMeansPlusPlusClusterer<DoublePoint>(K, ITERATIONS, new EarthMoversDistance());
-		
-		MultiKMeansPlusPlusClusterer<DoublePoint> multiClusterer = new MultiKMeansPlusPlusClusterer<DoublePoint>(clusterer, TRIALS);
+		MultiKMeansPlusPlusClusterer<DoublePoint> multiClusterer = new MultiKMeansPlusPlusClusterer<DoublePoint>(K, ITERATIONS, new EarthMoversDistance(), EmptyClusterStrategy.LARGEST_VARIANCE, 4, TRIALS, 8);
 		long start = System.currentTimeMillis();
 		
 		List<CentroidCluster<DoublePoint>> clusterResults = multiClusterer.cluster(data);
