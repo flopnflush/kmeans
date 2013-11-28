@@ -9,41 +9,45 @@ import fnf.clustering.KMeansPlusPlusClusterer.EmptyClusterStrategy;
 import fnf.clustering.distance.*;
 
 public class ClusterTest {
-	static final int N = 1000;
-	static final int K = 100;
-	static final int ITERATIONS = 100;
+	static final int N = 1000000;
+	static final int K = 1000;
+	static final int ITERATIONS = 1000;
 	static final int TRIALS = 8;
-	
+	static final int THREADS_PER_TRIAL = 4;
+	static final int PARALLEL_TRIALS = 8;
+
 	public static void main(String[] args) {
 		Random rnd = new Random();
-		
+
 		List<DoublePoint> data = new ArrayList<DoublePoint>();
-		
-		for (int i=0; i<N; i++) {
-			data.add(new DoublePoint(rnd.nextDouble(), rnd.nextDouble(), rnd.nextDouble()));
+
+		for (int i = 0; i < N; i++) {
+			data.add(new DoublePoint(rnd.nextDouble(), rnd.nextDouble(), rnd
+					.nextDouble()));
 		}
-		
-		MultiKMeansPlusPlusClusterer<DoublePoint> multiClusterer = new MultiKMeansPlusPlusClusterer<DoublePoint>(K, ITERATIONS, new EarthMoversDistance(), EmptyClusterStrategy.LARGEST_VARIANCE, 4, TRIALS, 8);
+
+		MultiKMeansPlusPlusClusterer<DoublePoint> multiClusterer = new MultiKMeansPlusPlusClusterer<DoublePoint>(
+				K, ITERATIONS, new EarthMoversDistance(),
+				EmptyClusterStrategy.LARGEST_VARIANCE, THREADS_PER_TRIAL, TRIALS, PARALLEL_TRIALS);
 		long start = System.currentTimeMillis();
-		
-		List<CentroidCluster<DoublePoint>> clusterResults = multiClusterer.cluster(data);
-		
+
+		List<CentroidCluster<DoublePoint>> clusterResults = multiClusterer
+				.cluster(data);
+
 		long stop = System.currentTimeMillis();
-		
+
 		System.out.println(stop - start + " ms");
-		
+
 		/*
-		for (int i=0; i<clusterResults.size(); i++) {
-		    System.out.println("Cluster " + i);
-		    for (DoublePoint locationWrapper : clusterResults.get(i).getPoints()) {
-		        for (int j=0; j<locationWrapper.getPoint().length; j++)
-		        	System.out.print(locationWrapper.getPoint()[j] + " ");
-		    	System.out.println();
-		    }
-		        	
-		    System.out.println();
-		}
-		*/
+		 * for (int i=0; i<clusterResults.size(); i++) {
+		 * System.out.println("Cluster " + i); for (DoublePoint locationWrapper
+		 * : clusterResults.get(i).getPoints()) { for (int j=0;
+		 * j<locationWrapper.getPoint().length; j++)
+		 * System.out.print(locationWrapper.getPoint()[j] + " ");
+		 * System.out.println(); }
+		 * 
+		 * System.out.println(); }
+		 */
 
 	}
 }

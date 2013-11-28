@@ -105,5 +105,9 @@ public class DoublePoint implements Clusterable, Serializable {
 	public int getCount() {
 		return n;
 	}
+	
+	public void add(int n) {
+		this.n += n;
+	}
 
 }
