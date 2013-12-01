@@ -16,6 +16,8 @@
  */
 package fnf.clustering.distance;
 
+import org.apache.commons.math3.util.FastMath;
+
 
 /**
  * Calculates the Earh Mover's distance (also known as Wasserstein metric) between two distributions.
@@ -36,7 +38,7 @@ public class EarthMoversDistance implements DistanceMeasure {
         double totalDistance = 0;
         for (int i = 0; i < a.length; i++) {
             final double currentDistance = (a[i] + lastDistance) - b[i];
-            totalDistance += Math.abs(currentDistance);
+            totalDistance += FastMath.abs(currentDistance);
             lastDistance = currentDistance;
         }
         return totalDistance;

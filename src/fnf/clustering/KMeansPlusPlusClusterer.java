@@ -224,19 +224,6 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 		return nThreads;
 	}
 
-	/**
-	 * Runs the K-means++ clustering algorithm.
-	 * 
-	 * @param points
-	 *            the points to cluster
-	 * @return a list of clusters containing the points
-	 * @throws MathIllegalArgumentException
-	 *             if the data points are null or the number of clusters is
-	 *             larger than the number of data points
-	 * @throws ConvergenceException
-	 *             if an empty cluster is encountered and the
-	 *             {@link #emptyStrategy} is set to {@code ERROR}
-	 */
 	public List<CentroidCluster<T>> cluster(final Collection<T> points) {
 
 		// number of clusters has to be smaller or equal the number of data

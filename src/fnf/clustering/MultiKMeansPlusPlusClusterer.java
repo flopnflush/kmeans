@@ -17,7 +17,6 @@
 
 package fnf.clustering;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -68,17 +67,6 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
         return numTrials;
     }
 
-    /**
-     * Runs the K-means++ clustering algorithm.
-     *
-     * @param points the points to cluster
-     * @return a list of clusters containing the points
-     * @throws MathIllegalArgumentException if the data points are null or the number
-     *   of clusters is larger than the number of data points
-     * @throws ConvergenceException if an empty cluster is encountered and the
-     *   underlying {@link KMeansPlusPlusClusterer} has its
-     *   {@link KMeansPlusPlusClusterer.EmptyClusterStrategy} is set to {@code ERROR}.
-     */
     public List<CentroidCluster<T>> cluster(final Collection<T> points) {
 		final AtomicLong bestVarianceSum = new AtomicLong();
 		bestVarianceSum.set(Double.doubleToLongBits(Double.MAX_VALUE));
