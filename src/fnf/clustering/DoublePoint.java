@@ -35,6 +35,9 @@ public class DoublePoint implements Clusterable, Serializable {
     
     /** Count */
     private int n = 1;
+    
+    /** Index */
+    private int index;
 
     /**
      * Build an instance wrapping an double array.
@@ -58,6 +61,12 @@ public class DoublePoint implements Clusterable, Serializable {
     public DoublePoint(final int count, final double... point) {
     	this.point = point;
     	this.n = count;
+    }
+    
+    public DoublePoint(final int index, final int count, final double... point) {
+    	this.point = point;
+    	this.n = count;
+    	this.index = index;
     }
 
     /**
@@ -104,6 +113,10 @@ public class DoublePoint implements Clusterable, Serializable {
 	@Override
 	public int getCount() {
 		return n;
+	}
+	
+	public int getIndex() {
+		return index;
 	}
 	
 	public void add(int n) {
