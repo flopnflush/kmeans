@@ -42,19 +42,17 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
     private final int maxIterations;
     private final DistanceMeasure measure;
     private final EmptyClusterStrategy emptyStrategy;
-    private final int threadsPerTrial;
     private final int numTrials; 
     private final int parallelTrials;
     
 	public MultiKMeansPlusPlusClusterer(final int k, final int maxIterations,
 			final DistanceMeasure measure,
-			final EmptyClusterStrategy emptyStrategy, final int threadsPerTrial, final int numTrials, final int parallelTrials) {
+			final EmptyClusterStrategy emptyStrategy, final int numTrials, final int parallelTrials) {
 		super(measure);
 		this.k = k;
 		this.maxIterations = maxIterations;
 		this.measure = measure;
 		this.emptyStrategy = emptyStrategy;
-		this.threadsPerTrial = threadsPerTrial;
 		this.numTrials = numTrials;
 		this.parallelTrials = parallelTrials;
 	}
@@ -82,7 +80,7 @@ public class MultiKMeansPlusPlusClusterer<T extends Clusterable> extends Cluster
         		@Override
         		public void run() {
                 	System.out.println("Starting trial " + trial);
-                	KMeansPlusPlusClusterer<T> clusterer = new KMeansPlusPlusClusterer<T>(k, maxIterations, measure, emptyStrategy, threadsPerTrial, trial);
+                	KMeansPlusPlusClusterer<T> clusterer = new KMeansPlusPlusClusterer<T>(k, maxIterations, measure, emptyStrategy, trial);
                 	
                     // compute a clusters list
                     List<CentroidCluster<T>> clusters = clusterer.cluster(points);

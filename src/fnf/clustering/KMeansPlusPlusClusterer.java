@@ -22,12 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import fnf.clustering.distance.DistanceMeasure;
 import fnf.clustering.distance.EuclideanDistance;
@@ -43,8 +37,7 @@ import fnf.clustering.distance.EuclideanDistance;
  * @version $Id: KMeansPlusPlusClusterer.java 1461866 2013-03-27 21:54:36Z tn $
  * @since 3.2
  */
-public class KMeansPlusPlusClusterer<T extends Clusterable> extends
-		Clusterer<T> {
+public class KMeansPlusPlusClusterer<T extends Clusterable> extends Clusterer<T> {
 
 	/** Strategies to use for replacing an empty cluster. */
 	public static enum EmptyClusterStrategy {
@@ -74,14 +67,8 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 
 	/** Selected strategy for empty clusters. */
 	private final EmptyClusterStrategy emptyStrategy;
-
-	/** Number of Threads */
-	private final int nThreads;
 	
 	private final int trial;
-
-	/** Threadpool. */
-	private ExecutorService threadPool;
 
 	/**
 	 * Build a clusterer.
@@ -155,41 +142,16 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 	public KMeansPlusPlusClusterer(final int k, final int maxIterations,
 			final DistanceMeasure measure,
 			final EmptyClusterStrategy emptyStrategy) {
-		this(k, maxIterations, measure, EmptyClusterStrategy.LARGEST_VARIANCE,
-				Runtime.getRuntime().availableProcessors());
+		this(k, maxIterations, measure, EmptyClusterStrategy.LARGEST_VARIANCE, 0);
 	}
-
-	/**
-	 * Build a clusterer.
-	 * 
-	 * @param k
-	 *            the number of clusters to split the data into
-	 * @param maxIterations
-	 *            the maximum number of iterations to run the algorithm for. If
-	 *            negative, no maximum will be used.
-	 * @param measure
-	 *            the distance measure to use
-	 * @param emptyStrategy
-	 *            strategy to use for handling empty clusters that
-	 * @param threads
-	 *            the number of threads to use may appear during algorithm
-	 *            iterations
-	 */
-	public KMeansPlusPlusClusterer(final int k, final int maxIterations,
-			final DistanceMeasure measure,
-			final EmptyClusterStrategy emptyStrategy, final int threads) {
-		this(k, maxIterations, measure, emptyStrategy, threads, 0);
-	}
-	
 	
 	public KMeansPlusPlusClusterer(final int k, final int maxIterations,
 			final DistanceMeasure measure,
-			final EmptyClusterStrategy emptyStrategy, final int threads, final int trial) {
+			final EmptyClusterStrategy emptyStrategy, final int trial) {
 		super(measure);
 		this.k = k;
 		this.maxIterations = maxIterations;
 		this.emptyStrategy = emptyStrategy;
-		this.nThreads = threads;
 		this.trial = trial;
 	}
 
@@ -219,10 +181,6 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 	public EmptyClusterStrategy getEmptyClusterStrategy() {
 		return emptyStrategy;
 	}
-	
-	public int getNumberOfThreads() {
-		return nThreads;
-	}
 
 	public List<CentroidCluster<T>> cluster(final Collection<T> points) {
 
@@ -233,13 +191,10 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 			return null;
 		}
 
-		threadPool = Executors.newFixedThreadPool(nThreads);
-
 		// Convert to list for indexed access. Make it unmodifiable, since
 		// removal of items
 		// would screw up the logic of this method.
-		final List<T> pointList = Collections
-				.unmodifiableList(new ArrayList<T>(points));
+		final List<T> pointList = Collections.unmodifiableList(new ArrayList<T>(points));
 
 		// create the initial clusters
 		ArrayList<CentroidCluster<T>> clusters = chooseInitialCenters(pointList);
@@ -283,8 +238,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 				}
 				newClusters.add(new CentroidCluster<T>(newCenter));
 			}
-			int changes = assignPointsToClusters(newClusters, pointList,
-					assignments);
+			int changes = assignPointsToClusters(newClusters, pointList, assignments);
 			clusters = newClusters;
 
 			System.out.printf("T%2d: %4d | %8d changes | %6d ms | %5d s\n",
@@ -297,8 +251,6 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 				break;
 			}
 		}
-
-		threadPool.shutdown();
 		return clusters;
 	}
 
@@ -314,41 +266,19 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 	 * @return the number of points assigned to different clusters as the
 	 *         iteration before
 	 */
-	private int assignPointsToClusters(
-			final ArrayList<CentroidCluster<T>> clusters,
-			final List<T> pointList, final int[] assignments) {
-		// int assignedDifferently = 0;
-		final AtomicInteger assignedDifferently = new AtomicInteger();
-		final CountDownLatch latch = new CountDownLatch(pointList.size());
-
-		for (int i = 0; i < pointList.size(); i++) {
-			final int pointIndex = i;
-			threadPool.submit(new Runnable() {
-				@Override
-				public void run() {
-					final T p = pointList.get(pointIndex);
-					int clusterIndex = getNearestCluster(clusters, p);
-					if (clusterIndex != assignments[pointIndex]) {
-						assignedDifferently.incrementAndGet();
-					}
-
-					assignments[pointIndex] = clusterIndex;
-					latch.countDown();
-				}
-			});
+	private int assignPointsToClusters(final ArrayList<CentroidCluster<T>> clusters, final List<T> pointList, final int[] assignments) {
+		int assignedDifferently = 0;
+		int pointIndex = 0;
+		for (final T p : pointList) {
+			int clusterIndex = getNearestCluster(clusters, p);
+			if (clusterIndex != assignments[pointIndex]) {
+				assignedDifferently++;
+			}
+			clusters.get(clusterIndex).addPoint(p);
+			assignments[pointIndex++] = clusterIndex;
 		}
 
-		try {
-			latch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-		for (int i = 0; i < assignments.length; i++) {
-			clusters.get(assignments[i]).addPoint(pointList.get(i));
-		}
-
-		return assignedDifferently.get();
+        return assignedDifferently;
 	}
 
 	/**
@@ -465,46 +395,16 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 					 * minDistSquared[j]) { minDistSquared[j] = d2; } } }
 					 */
 
-					final int chunksize = (numPoints + nThreads - 1) / nThreads;
-					final int loops = (numPoints + chunksize - 1) / chunksize;
-					final CountDownLatch latch = new CountDownLatch(loops);
-					for (int j = 0; j < numPoints;) {
-						final int lo = j;
-						j += chunksize;
-						final int hi = (j < numPoints) ? j : numPoints;
-						threadPool.submit(new Runnable() {
-							public void run() {
-								for (int j = lo; j < hi; j++) {
-									if (!taken[j]) {
-										final T point = pointList.get(j);
-										double d = distance(p, point);
-										double d2 = d * d * point.getCount();
-										if (d2 < minDistSquared[j]) {
-											minDistSquared[j] = d2;
-										}
-									}
-								}
-								latch.countDown();
+					for (int j = 0; j < numPoints; j++) {
+						if (!taken[j]) {
+							final T point = pointList.get(j);
+							double d = distance(p, point);
+							double d2 = d * d * point.getCount();
+							if (d2 < minDistSquared[j]) {
+								minDistSquared[j] = d2;
 							}
-						});
+						}
 					}
-					try {
-						latch.await();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					
-					/*
-					final int progress = (int) Math.round(resultSet.size()*100.0/k);
-					System.out.print("[");
-					for (int i=0; i<20; i++) {
-						if (i<progress/(100/20))
-							System.out.print("=");
-						else
-							System.out.print(" ");
-					}
-					System.out.print("] " + progress + "%\r");
-					*/
 				}
 
 			} else {
@@ -532,57 +432,37 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 	private T getPointFromLargestVarianceCluster(
 			final ArrayList<CentroidCluster<T>> clusters) {
 
-		// double maxVariance = Double.NEGATIVE_INFINITY;
-		final AtomicLong maxVariance = new AtomicLong();
-		maxVariance.set(Double.doubleToLongBits(Double.NEGATIVE_INFINITY));
-		final AtomicReference<Cluster<T>> selected = new AtomicReference<Cluster<T>>();
-		final CountDownLatch latch = new CountDownLatch(clusters.size());
+		double maxVariance = Double.NEGATIVE_INFINITY;
+		Cluster<T> selected = null;
 
 		for (final CentroidCluster<T> cluster : clusters) {
-			threadPool.submit(new Runnable() {
-				@Override
-				public void run() {
-					if (!cluster.getPoints().isEmpty()) {
-						// compute the distance variance of the current cluster
-						final Clusterable center = cluster.getCenter();
-						double variance = 0;
-						int n = 0;
-						for (final T point : cluster.getPoints()) {
-							final double dist = distance(point, center);
-							variance += dist * dist * point.getCount();
-							n += point.getCount();
-						}
-						variance /= n;
-
-						// select the cluster with the largest variance
-						while(true) {
-						    final long oldMaxVariance = maxVariance.get();
-						    if(variance <= Double.longBitsToDouble(oldMaxVariance))
-						        break;
-						    if(maxVariance.compareAndSet(oldMaxVariance, Double.doubleToLongBits(variance))) {
-						    	selected.getAndSet(cluster);
-						    	break;
-						    }        
-						}
-					}
-					latch.countDown();
+			if (!cluster.getPoints().isEmpty()) {
+				// compute the distance variance of the current cluster
+				final Clusterable center = cluster.getCenter();
+				double variance = 0;
+				int n = 0;
+				for (final T point : cluster.getPoints()) {
+					final double dist = distance(point, center);
+					variance += dist * dist * point.getCount();
+					n += point.getCount();
 				}
-			});
-		}
+				variance /= n;
 
-		try {
-			latch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+				// select the cluster with the largest variance
+				if (variance > maxVariance) {
+					selected = cluster;
+					maxVariance = variance;
+				}
+			}
 		}
 
 		// did we find at least one non-empty cluster ?
-		if (selected.get() == null) {
+		if (selected == null) {
 			throw new RuntimeException();
 		}
 
 		// extract a random point from the cluster
-		final List<T> selectedPoints = selected.get().getPoints();
+		final List<T> selectedPoints = selected.getPoints();
 		return selectedPoints.remove(random.nextInt(selectedPoints.size()));
 
 	}
@@ -674,8 +554,7 @@ public class KMeansPlusPlusClusterer<T extends Clusterable> extends
 	 *            the point to find the nearest {@link Cluster} for
 	 * @return the index of the nearest {@link Cluster} to the given point
 	 */
-	private int getNearestCluster(
-			final Collection<CentroidCluster<T>> clusters, final T point) {
+	private int getNearestCluster(final Collection<CentroidCluster<T>> clusters, final T point) {
 		double minDistance = Double.MAX_VALUE;
 		int clusterIndex = 0;
 		int minCluster = 0;

@@ -31,7 +31,7 @@ public class DoublePoint implements Clusterable, Serializable {
     private static final long serialVersionUID = 3946024775784901369L;
 
     /** Point coordinates. */
-    private final double[] point;
+    private double[] point;
     
     /** Count */
     private int n = 1;
@@ -81,6 +81,10 @@ public class DoublePoint implements Clusterable, Serializable {
         for ( int i = 0; i < point.length; i++) {
             this.point[i] = point[i];
         }
+    }
+    
+    public void setPoint(final double... point) {
+    	this.point = point;
     }
 
     /** {@inheritDoc} */

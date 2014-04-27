@@ -29,7 +29,7 @@ public interface Clusterable {
      *
      * @return the point array
      */
-    double[] getPoint();
+   	double[] getPoint();
     
     
     /**
